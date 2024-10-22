@@ -44,6 +44,8 @@ class StudyRelationship < ActiveRecord::Base
       study_statistics_comparisons
       background_jobs
       ctgov_metadata
+      ctgov_mappings
+      schema_snapshots
     )
   end
 
