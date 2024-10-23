@@ -46,6 +46,7 @@ class StudyRelationship < ActiveRecord::Base
       ctgov_metadata
       ctgov_mappings
       schema_snapshots
+      ctgov_documentation
     )
   end
 
