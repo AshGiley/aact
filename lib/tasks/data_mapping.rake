@@ -3,7 +3,7 @@ namespace :data_mapping do
 
   task process: :environment do
     puts "Processing mapping source file..."
-    file = Rails.root.join("lib", "aact", "mapping.json")
+    file = Rails.root.join("lib", "aact", "outcomes.json")
     data = JSON.parse(File.read(file))
 
     service = DataMappingService.new(data)
