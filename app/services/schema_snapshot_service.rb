@@ -38,9 +38,10 @@ class SchemaSnapshotService
 
   private
 
+  # TODO: filter out Views (table_type = "BASE TABLE")
   def current_schema_data
     @current_schema_data ||= ActiveRecord::Base.connection.select_all(<<-SQL).to_a
-      SELECT table_name, column_name
+      SELECT table_name, column_name, data_type, is_nullable
       FROM information_schema.columns
       WHERE table_schema = '#{@schema_name}'
       ORDER BY table_name, ordinal_position;
