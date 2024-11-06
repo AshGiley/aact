@@ -1,18 +1,40 @@
 class DataMappingService
-  def initialize(mapping)
-    @mapping = mapping
+
+  def process
+    snapshot = take_snapshot
+
+    ActiveRecord::Base.transaction do
+      if mapping_changed?(snapshot)
+        puts "Changes detected in mapping, creating snapshot"
+        Support::MappingSnapshot.create(snapshot: snapshot)
+
+        # process json snapshot
+        mappings = process_json(snapshot)
+        # byebug
+        deduplicated_mappings = mappings.uniq { |entry| [ entry[:table_name], entry[:field_name], entry[:api_path] ] }
+        # Bulk upsert operation for efficiency
+        CtgovApi::Mapping.upsert_all(deduplicated_mappings, unique_by: [ :table_name, :field_name, :api_path ])
+
+      else
+        puts "No changes detected in mapping"
+      end
+    end
   end
 
-  def data_mapping
-    # process_mapping(@mapping)
-    all_mappings = process_json(@mapping)
 
-    deduplicated_mappings = all_mappings.uniq { |entry| [ entry[:table_name], entry[:field_name], entry[:api_path] ] }
+  private
 
-    # Bulk upsert operation for efficiency
-    CtgovApi::Mapping.upsert_all(deduplicated_mappings, unique_by: [ :table_name, :field_name, :api_path ])
+  def take_snapshot
+    StudyRelationship.load_mappings
+    JSON.parse(StudyRelationship.sorted_mapping.to_json)
   end
 
+
+  def mapping_changed?(current)
+    latest = Support::MappingSnapshot.latest_snapshot
+    return true if latest.nil?
+    latest != current
+  end
 
   def process_json(mappings, parent_root = nil)
     all_mappings = [] # aka records in the mapping table
@@ -30,8 +52,7 @@ class DataMappingService
           table_name: mapping["table"],
           field_name: column["name"],
           api_path: api_path,
-          # ctgov_metadata_id: fetch_metadata_id(api_path),
-          active: true,
+          active: true, # do we keep this?
           created_at: Time.now,
           updated_at: Time.now
         }
@@ -44,12 +65,6 @@ class DataMappingService
     all_mappings
   end
 
-  private
-
-  def fetch_metadata_id(api_path)
-    metadata = CtgovApi::Metadata.find_by(path: api_path)
-    metadata&.id
-  end
 
   def build_root(parent_root, mapping)
     root = parent_root ? parent_root.dup : []
@@ -77,4 +92,6 @@ class DataMappingService
 
     full_path
   end
+
+
 end
