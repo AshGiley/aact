@@ -52,7 +52,6 @@ class DataMappingService
           table_name: mapping["table"],
           field_name: column["name"],
           api_path: api_path,
-          active: true, # do we keep this?
           created_at: Time.now,
           updated_at: Time.now
         }

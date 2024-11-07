@@ -2,7 +2,6 @@ class CreateCtgovMappingsTable < ActiveRecord::Migration[6.0]
 
   def change
     create_table "support.ctgov_mappings" do |t|
-      t.boolean :active, default: true
       t.string :table_name
       t.string :field_name
       t.string :api_path
