@@ -15,6 +15,8 @@ class DataMappingService
         # Bulk upsert operation for efficiency
         CtgovApi::Mapping.upsert_all(deduplicated_mappings, unique_by: [ :table_name, :field_name, :api_path ])
 
+        # Remove records in CtgovApi::Mapping that are not in the current snapshot
+        remove_obsolete_mappings(deduplicated_mappings)
       else
         puts "No changes detected in mapping"
       end
@@ -93,4 +95,18 @@ class DataMappingService
   end
 
 
+  def remove_obsolete_mappings(mappings)
+    # key from active mapping snapshot
+    snapshot_keys = mappings.map { |entry| [entry[:table_name], entry[:field_name], entry[:api_path]] }
+
+    # get 1000 records batch by default
+    CtgovApi::Mapping.find_each do |db_mapping|
+      db_key = [db_mapping.table_name, db_mapping.field_name, db_mapping.api_path]
+      
+      unless snapshot_keys.include?(db_key)
+        db_mapping.delete
+        puts "Removed mapping: #{db_key}"
+      end
+    end
+  end
 end
