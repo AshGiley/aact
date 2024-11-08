@@ -8,7 +8,7 @@ namespace :docs do
     end
   end
   
-  
+
   namespace :mapping do
     desc "Take mapping snapshot and update current state"
     task process: :environment do
@@ -28,9 +28,9 @@ namespace :docs do
     end
     
     desc "take snapshot of the schema and update current state"
-    task :process, [:schema_name] => :environment do |_t, args|
-      schema_name = args[:schema_name] || "ctgov"
-      SchemaSyncService.new(schema_name).process
+    task process: :environment do
+      CTGov::SchemaService.new.process
+      puts "Schema Processed!"
     end
   end
 end
