@@ -3,8 +3,8 @@ namespace :docs do
   namespace :metadata do
     desc "Process CTGov API metadata"
     task process: :environment do
-      CTGov::Metadata::Service.new.process
-      puts "Metadata Processed!"
+      CTGov::MetadataService.new.process
+      puts "Completed!"
     end
   end
   
@@ -13,7 +13,7 @@ namespace :docs do
     desc "Take mapping snapshot and update current state"
     task process: :environment do
       Mapping::Service.new.process
-      puts "Mapping Processed!"
+      puts "Completed!"
     end
   end
 
@@ -22,7 +22,7 @@ namespace :docs do
     desc "update current schema state"
     task process: :environment do
       Schema::CtgovService.new.process
-      puts "ctgov schema state updated!"
+      puts "Completed!"
     end
   end
 end

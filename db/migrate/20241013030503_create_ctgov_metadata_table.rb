@@ -1,4 +1,4 @@
-class CreateCtgovApiMetadataTable < ActiveRecord::Migration[6.0]
+class CreateCtgovMetadataTable < ActiveRecord::Migration[6.0]
   def change
     create_table "support.ctgov_metadata" do |t|
       t.string :name
