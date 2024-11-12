@@ -12,16 +12,17 @@ namespace :docs do
   namespace :mapping do
     desc "Take mapping snapshot and update current state"
     task process: :environment do
-      Mapping::Service.new.process
+      MappingService.new.process
       puts "Completed!"
     end
   end
 
 
+  # rename if schema is passed as argument
   namespace :ctgov_schema do
     desc "update current schema state"
     task process: :environment do
-      Schema::CtgovService.new.process
+      SchemaService.new.process
       puts "Completed!"
     end
   end

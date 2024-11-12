@@ -1,6 +1,6 @@
 module Support
-  class MappingSnapshot < ApplicationRecord
-    self.table_name = "support.mapping_snapshots"
+  class CtgovMappingSnapshot < ApplicationRecord
+    self.table_name = "support.ctgov_mapping_snapshots"
     validates :snapshot, presence: true
 
     def self.latest_snapshot

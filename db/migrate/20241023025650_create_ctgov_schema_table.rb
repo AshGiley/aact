@@ -11,6 +11,6 @@ class CreateCtgovSchemaTable < ActiveRecord::Migration[6.0]
       t.timestamps
     end
 
-    add_index :ctgov_schema, [:table_name, :column_name], unique: true, name: 'index_ctgov_documentation_on_table_and_column'
+    add_index "support.ctgov_schema", [:table_name, :column_name], unique: true, name: 'index_ctgov_schema_on_table_and_column'
   end
 end
