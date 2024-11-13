@@ -12,14 +12,14 @@ module CTGov
 
       return if snapshot.nil?
 
-      unless @snapshot_handler.snapshot_changed?(snapshot)
+      unless @snapshot_handler.metadata_changed?(snapshot)
         puts "No changes detected in api metadata"
         return
       end
 
       ActiveRecord::Base.transaction do
         puts "api metadata changed"
-        @snapshot_handler.save_snapshot(snapshot)
+        @snapshot_handler.save(snapshot)
         sync_metadata_with_snapshot(snapshot)
       end
     end

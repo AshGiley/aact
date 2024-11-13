@@ -19,12 +19,14 @@ module CTGov
     end
 
 
-    def save_snapshot(snapshot)
+    def save(snapshot)
       Support::CtgovMetadataSnapshot.create!(api_version: @api_version, snapshot: snapshot)
+    rescue ActiveRecord::RecordInvalid => e
+      Rails.logger.error("Error saving snapshot: #{e.message}")
     end
 
 
-    def snapshot_changed?(current)
+    def metadata_changed?(current)
       latest = latest_snapshot
       return true if latest.nil?
       latest != current

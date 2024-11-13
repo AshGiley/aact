@@ -13,7 +13,7 @@ class SchemaService
       return # raise error?
     end
 
-    unless @snapshot_handler.snapshot_changed?(snapshot)
+    unless @snapshot_handler.schema_changed?(snapshot)
       puts "No changes detected in schema"
       return
     end
@@ -21,7 +21,7 @@ class SchemaService
     
     ActiveRecord::Base.transaction do
       puts "Schema changed"
-      @snapshot_handler.save_snapshot(snapshot)
+      @snapshot_handler.save(snapshot)
       sync_schema_with_snapshot(snapshot)
     end
   end

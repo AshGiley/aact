@@ -31,12 +31,14 @@ class SchemaSnapshotHandler
   end
 
 
-  def save_snapshot(snapshot)
+  def save(snapshot)
     Support::CtgovSchemaSnapshot.create!(schema_name: @schema, snapshot: snapshot)
+  rescue ActiveRecord::RecordInvalid => e
+    Rails.logger.error("Error saving snapshot: #{e.message}")
   end
 
 
-  def snapshot_changed?(current_snapshot)
+  def schema_changed?(current_snapshot)
     latest = latest_snapshot
     return true if latest.nil?
     latest != current_snapshot
