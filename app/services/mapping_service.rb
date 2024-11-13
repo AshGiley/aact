@@ -1,42 +1,32 @@
 class MappingService
 
+  def initialize
+    @snapshot_handler = MappingSnapshotHandler.new
+  end
+
+
   def process
-    snapshot = take_snapshot
+    snapshot = @snapshot_handler.take_snapshot
+
+    return if snapshot.nil?
+
+    unless @snapshot_handler.mapping_changed?(snapshot)
+      puts "No changes detected in mapping"
+      return
+    end
 
     ActiveRecord::Base.transaction do
-      if mapping_changed?(snapshot)
-        puts "Changes detected in mapping, creating snapshot"
-        Support::CtgovMappingSnapshot.create(snapshot: snapshot)
-
-        # process json snapshot
-        mappings = process_json(snapshot)
-        # byebug
-        deduplicated_mappings = mappings.uniq { |entry| [ entry[:table_name], entry[:field_name], entry[:api_path] ] }
-        # Bulk upsert operation for efficiency
-        Support::CtgovMapping.upsert_all(deduplicated_mappings, unique_by: [ :table_name, :field_name, :api_path ])
-
-        # Remove records in CtgovApi::Mapping that are not in the current snapshot
-        remove_obsolete_mappings(deduplicated_mappings)
-      else
-        puts "No changes detected in mapping"
-      end
+      puts "Changes detected in mapping, creating snapshot and updating mappings"
+      @snapshot_handler.save(snapshot)
+      mappings = process_json(snapshot)
+      unique_mappings = mappings.uniq { |entry| [ entry[:table_name], entry[:field_name], entry[:api_path] ] }
+      create_or_update_mapping(unique_mappings)
+      remove_obsolete_mappings(unique_mappings)
     end
   end
 
 
   private
-
-  def take_snapshot
-    StudyRelationship.load_mappings
-    JSON.parse(StudyRelationship.sorted_mapping.to_json)
-  end
-
-
-  def mapping_changed?(current)
-    latest = Support::CtgovMappingSnapshot.latest_snapshot
-    return true if latest.nil?
-    latest != current
-  end
 
   def process_json(mappings, parent_root = nil)
     all_mappings = [] # aka records in the mapping table
@@ -94,6 +84,16 @@ class MappingService
     full_path
   end
 
+  def create_or_update_mapping(data)
+    Support::CtgovMapping.import(
+      data,
+      validate: true,
+      on_duplicate_key_update: {
+        conflict_target: [:table_name, :field_name, :api_path],
+        columns: [:updated_at]
+      }
+    )
+  end
 
   def remove_obsolete_mappings(mappings)
     # key from active mapping snapshot
