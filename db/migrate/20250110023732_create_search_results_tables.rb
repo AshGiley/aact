@@ -18,9 +18,5 @@ class CreateSearchResultsTables < ActiveRecord::Migration[6.0]
     add_index "ctgov.search_term_results", [:nct_id, :search_term_id], 
               unique: true,
               name: "index_ctgov_search_term_results_on_nct_id_and_search_term_id"
-              
-    add_foreign_key "ctgov.search_term_results", "studies", 
-                    column: :nct_id, 
-                    primary_key: "nct_id"
   end
 end
