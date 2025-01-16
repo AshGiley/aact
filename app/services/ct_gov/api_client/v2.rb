@@ -14,7 +14,8 @@ module CTGov
       ["protocolSection", "identificationModule", "nctId"]
     end
 
-    def fetch_studies(range: nil, nct_ids: nil, page_size: nil)
+    # TODO: Make this method private eventually
+    def fetch_studies(range: nil, search: nil, nct_ids: nil, page_size: nil, nct_ids_only: false)
       page_token = nil
       total_count = 0
       total_fetched = 0
@@ -22,6 +23,8 @@ module CTGov
       params = { pageSize: page_size, countTotal: true }
       params["query.term"] = range
       params["filter.ids"] = nct_ids
+      params["query.cond"] = search
+      params["fields"] = "NCTId" if nct_ids_only
 
       loop do
         params[:pageToken] = page_token
@@ -60,6 +63,12 @@ module CTGov
     def get_studies_by_nct_ids(list:, page_size: 50)
       nct_ids = list.join('|')
       fetch_studies(nct_ids: nct_ids, page_size: page_size) do |studies|
+        yield studies
+      end
+    end
+
+    def search_studies(query:, page_size: nil)
+      fetch_studies(search: query, page_size: page_size, nct_ids_only: true) do |studies|
         yield studies
       end
     end
