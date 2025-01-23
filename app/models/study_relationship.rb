@@ -51,11 +51,16 @@ class StudyRelationship < ActiveRecord::Base
       ctgov_schema_snapshots
       search_terms
       search_term_results
+      settings
     )
   end
 
   def self.loadable_tables
-    connection.tables - blacklist
+    tables = connection.tables - blacklist
+    if Support::Setting.export_search_results?
+      tables += %w(search_terms search_term_results)
+    end
+    tables
   end
 
   def self.study_models

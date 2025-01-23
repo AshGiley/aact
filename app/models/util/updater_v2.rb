@@ -9,6 +9,7 @@ module Util
       @type = (params[:event_type] || "incremental")
       @schema = params[:schema] || "ctgov"
       @sync_service = CTGov::StudySyncService.new
+      @search_service = CTGov::SearchResultsService.new
     end
 
 
@@ -36,6 +37,7 @@ module Util
       run_step("Add Indexes/Constraints") { db_mgr.add_indexes_and_constraints }
       run_step("Compare Counts", skipped = true)
       run_step("Study Searches", skipped = true)
+      run_step("Process Search Terms") { process_search_terms }
       run_step("Sanity Checks") { @load_event.run_sanity_checks(@schema) }
 
       if @load_event.sanity_checks.count == 0
@@ -85,6 +87,25 @@ module Util
       Util::FileManager.new.save_static_copy(filename, @schema)
       rescue StandardError => e
         @load_event.add_problem("#{e.message} (#{e.class} #{e.backtrace}")
+    end
+
+    def process_search_terms
+      return unless Support::Setting.export_search_results?
+
+      groups = SearchTerm.distinct.pluck(:group).compact
+      log("Processing #{groups.count} search term groups...")
+
+      groups.each do |group|
+        begin
+          log("Refreshing search results for group: #{group}")
+          @search_service.refresh_search_results_for(group)
+        rescue => e
+          log("Error processing group #{group}: #{e.message}")
+          @load_event.add_problem("Failed to process search group #{group}: #{e.message}")
+          # Continue with other groups rather than failing completely
+          next
+        end
+      end
     end
 
     def create_flat_files
