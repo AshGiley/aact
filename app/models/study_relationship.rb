@@ -43,11 +43,24 @@ class StudyRelationship < ActiveRecord::Base
       file_records
       study_statistics_comparisons
       background_jobs
+      ctgov_metadata
+      ctgov_mapping
+      ctgov_schema
+      ctgov_metadata_snapshots
+      ctgov_mapping_snapshots
+      ctgov_schema_snapshots
+      search_terms
+      search_term_results
+      settings
     )
   end
 
   def self.loadable_tables
-    connection.tables - blacklist
+    tables = connection.tables - blacklist
+    if Support::Setting.export_search_results?
+      tables += %w(search_terms search_term_results)
+    end
+    tables
   end
 
   def self.study_models
@@ -174,7 +187,7 @@ class StudyRelationship < ActiveRecord::Base
   end
 
   def get_text(label)
-    str=''
+    str = ''
     nodes=xml.xpath("//#{label}")
     nodes.each {|node| str << node.xpath("textblock").text}
     str
