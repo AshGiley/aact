@@ -13,6 +13,9 @@ module CTGov
       attributes = { term: search_term.downcase }
       attributes[:group] = group if group.present?
       search_term_record = SearchTerm.find_by(term: attributes[:term]) || SearchTerm.create!(attributes)
+      
+      # current logic: remove all existing search results for the term and insert fresh results
+      SearchTermResult.where(search_term_id: search_term_record.id).delete_all
 
       @api_client.search_studies(query: search_term, page_size: page_size) do |studies|
         persist(studies, search_term_record)
@@ -35,6 +38,7 @@ module CTGov
 
     def persist(studies, search_term)
       silence_active_record do
+        # covers potential discrepancy between API and aact nct_ids ran outside of updater process
         nct_ids = studies.map { |study| study.dig(*@api_client.nct_id_path) }.compact
         valid_nct_ids = Study.where(nct_id: nct_ids).pluck(:nct_id)
 
@@ -47,13 +51,9 @@ module CTGov
           }
         end
 
-        # current logic: remove all existing search results for the term and insert fresh results
-        ActiveRecord::Base.transaction do
-          SearchTermResult.where(search_term_id: search_term.id).delete_all
-          return if study_results.empty?
-          SearchTermResult.insert_all(study_results)
-        end
-
+        return if study_results.empty?
+        SearchTermResult.insert_all(study_results)
+        
         Rails.logger.info("Imported #{study_results.size} search results for term: #{search_term.term}")
       end
     rescue => e
