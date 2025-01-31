@@ -93,11 +93,11 @@ module Util
       return unless Support::Setting.export_search_results?
 
       groups = SearchTerm.distinct.pluck(:group).compact
-      log("Processing #{groups.count} search term groups...")
+      log("Processing #{groups.count} search term groups...", event_log = false)
 
       groups.each do |group|
         begin
-          log("Refreshing search results for group: #{group}")
+          log("Refreshing search results for group: #{group}", event_log = false)
           @search_service.refresh_search_results_for(group)
         rescue => e
           log("Error processing group #{group}: #{e.message}")
