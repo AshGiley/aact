@@ -8,6 +8,10 @@ class BackgroundJob::DbQuery < BackgroundJob
     begin
       # run the SQL Query
       db = Util::DbManager.new
+      timeout = Support::Setting.playground_query_limit
+      Rails.logger.info("Setting query timeout to #{timeout}ms")
+      
+      db.public_connection.execute("SET statement_timeout = '#{timeout}'")
       @results = db.public_connection.execute(data['query'])
     
       # write out the query result to a csv file
@@ -41,6 +45,13 @@ class BackgroundJob::DbQuery < BackgroundJob
         completed_at: Time.now,
         url: result.service.send(:object_for, result.key).public_url
       )
+
+    rescue ActiveRecord::QueryCanceled => e
+      update(
+        status: "error", 
+        logs: "Query timeout after #{timeout/1000} seconds: #{e.message}",
+        user_error_message: "Query exceeded maximum execution time of #{timeout/1000} seconds. Please optimize your query."
+      )
     
     # if there is an error in the SQL Query, show the error message
     rescue ActiveRecord::StatementInvalid => e
@@ -50,6 +61,9 @@ class BackgroundJob::DbQuery < BackgroundJob
     # if the background job status is "error", show the user error message
     rescue StandardError => e
       update(status: "error", logs: e.message, user_error_message: "There was an error, please contact us.")
-    end    
+
+    ensure
+      Rails.logger.info("DB Query job #{id} completed with status: #{status}")
+    end
   end  
 end    
