@@ -2,7 +2,7 @@ FROM ruby:2.7.7
 
 RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt bullseye-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 RUN wget --no-check-certificate --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-RUN apt-get update -qq && apt-get install -y nodejs postgresql-client telnet vim zip cron graphviz wget
+RUN apt-get update -qq && apt-get install -y nodejs postgresql-client-14 telnet vim zip cron graphviz wget
 
 RUN mkdir /app
 WORKDIR /app
