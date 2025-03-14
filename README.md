@@ -9,7 +9,7 @@ If you need a copy of the database, but don't want to bother installing & runnin
 Below you'll find an image that illustrates the different AACT databases and schemas, while briefly describing their purposes.
 ![Visualization of the database arrangment for AACT(backend) and AACT-Admin(frontend)](public/aact_architecture.png "AACT Database Visualization")   
 
-## Requireqments
+## Requirements
 
 - Install zip  
     - For mac `brew install zip`
@@ -29,10 +29,11 @@ Common for Core and Admin apps setting up problems/issues:
 1. Ubuntu versions 22.04 and newer have no built-in openssl 1.1.1 and it causes problems with the installation of ruby versions older than 3.02 (information actual 6/20/2023).
 2. Keep in mind that these 2 apps will interact with each other, the purpose of the Core app is for populating DB only. AACT-admin uses the same db as AACT-core. Do not try to "rails s" AACT-core.
 3. In those 2 lines in the environment variables file: 
-`export AACT_CORE_DATABASE_URL=postgres://username:passw@localhost:5432/aact`
-`export AACT_CORE_TEST_DATABASE_URL=postgres://username:passw@localhost:5432/aact_test` 
+`export AACT_CORE_DATABASE_URL=postgres://username:password@localhost:5432/aact`
+`export AACT_CORE_TEST_DATABASE_URL=postgres://username:password@localhost:5432/aact_test` 
+
 username - your Postgresql DB username 
-passw - your postgres DB password
+password - your postgres DB password
 
 ## Getting Started
 
@@ -89,15 +90,15 @@ passw - your postgres DB password
 ```bash
 export AACT_PASSWORD=54104754
 export AACT_USERNAME=user_name
-export PGPASSWORD=passw
+export PGPASSWORD=password
 export TEST_PUBLIC_DB_USER=user_name
-export TEST_PUBLIC_DB_PASS=passw
+export TEST_PUBLIC_DB_PASS=password
 export PUBLIC_DB_USER=user_name
-export PUBLIC_DB_PASS=passw
+export PUBLIC_DB_PASS=password
 export AACT_DB_SUPER_USERNAME=user_name
 export PATH=$PATH:/lib/postgresql/15/bin
-export AACT_CORE_DATABASE_URL=postgres://DB_USER_NAME:DB_PASSW@localhost:5432/aact
-export AACT_CORE_TEST_DATABASE_URL=postgres://DB_USER_NAME:DB_PASSW@localhost:5432/aact_test
+export AACT_CORE_DATABASE_URL=postgres://DB_USER_NAME:DB_PASSWORD@localhost:5432/aact
+export AACT_CORE_TEST_DATABASE_URL=postgres://DB_USER_NAME:DB_PASSWORD@localhost:5432/aact_test
 ```
 
 Add RVM to PATH for scripting. Make sure this is the last PATH variable change. 
@@ -127,7 +128,7 @@ export DIGITALOCEAN_BUCKET=aact-dev
     Example: `export PATH=$PATH:/Library/PostgreSQL/13/bin`  
     https://wikimatze.de/installing-postgresql-gem-under-ubuntu-and-mac/  
 
-9. In the database.yml file, which is in config folder, lines 1-32 should look like:
+9. In the database.yml file, which is in config folder, lines 1-33 should look like:
 
 ```
 default: &default
@@ -185,11 +186,11 @@ development:
 The seed files are out of date so **DO NOT** call `db:seed`. Instead use the custom rake tasks.
 These are your options: 
 * `bin/rake db:restore_from_file[<path_to_file>,<database_name>]`   
-  For this option go to https://aact.ctti-clinicaltrials.org/snapshots and download a copy of the database. Unzip the snapshot folder.  
-  The file path will likely look like: `~/Downloads/<unzipped_snapshot_folder>/postgres_data.dmp`  
-  Example: `~/Downloads/20210906_clinical_trials/postgres_data.dmp`.  
-  Give this task the path to the postgres_data.dmp file and it will use it to populate the database.  
-  Example: `bin/rake "db:restore_from_file[~/Downloads/20210906_clinical_trials/postgres_data.dmp,aact]"`  
+  For this option go to https://aact.ctti-clinicaltrials.org/snapshots and download a copy of the database. Unzip the snapshot folder and rename it to match the date of the snapshot it contains in a YYYYMMDD format (ex: 20250314_clinical_trials_ctgov).  
+  The file path will likely look like: `~/Downloads/<unzipped_snapshot_folder>/postgres.dmp`  
+  Example: `~/Downloads/20250314_clinical_trials_ctgov/postgres.dmp`.  
+  Give this task the path to the postgres.dmp file and it will use it to populate the database.  
+  Example: `bin/rake "db:restore_from_file[~/Downloads/20250314_clinical_trials_ctgov/postgres.dmp,aact]"`  
 * `bin/rake db:restore_from_url[<url>,<database_name>]`  
   For this option go to https://aact.ctti-clinicaltrials.org/snapshots and copy the link for one of the database copies. Give this task the url you copied and it will download the file, unzip it, and use it to populate the database.  
     *Note: the rake tasks below take a very long time to run. You should not set full_featured to true if working locally.*  
