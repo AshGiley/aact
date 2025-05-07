@@ -19,10 +19,32 @@ module Util
     ##### connection management #####
 
     def public_connection
-      connection = PublicBase.connection
-      connection.schema_search_path = @schema
-      # puts "public connection: #{connection.schema_search_path}"
-      connection
+      max_attempts = 3
+      attempt = 0
+      backoff_time = 20
+      
+      begin
+        attempt += 1
+        connection = PublicBase.connection
+        connection.schema_search_path = @schema
+        connection.execute("SELECT 1")
+        return connection
+      rescue PG::ConnectionBad, ActiveRecord::StatementInvalid => e
+        if attempt < max_attempts
+          log("Public database connection error: #{e.message}. Retrying in #{backoff_time}s (#{attempt}/#{max_attempts})")
+          
+          PublicBase.connection_pool.disconnect! # Force reconnection
+          sleep(backoff_time)
+          
+          backoff_time *= 2 # Exponential backoff
+          retry
+        else
+          msg = "Failed to establish public database connection after #{max_attempts} attempts: #{e.message}"
+          log(msg)
+          event&.add_problem("#{Time.zone.now}: #{msg}")
+          raise e
+        end
+      end
     end
 
     def staging_connection
@@ -171,6 +193,10 @@ module Util
     # 2. if successful restore to public db
     def refresh_public_db
       restore_database(public_connection, fm.pg_dump_file)
+    rescue => e
+      error_msg = "Failed to refresh public database: #{e.message}"
+      log(error_msg)
+      event&.add_problem("#{Time.zone.now}: #{error_msg}")
     end
 
     def run_command_line(cmd)
