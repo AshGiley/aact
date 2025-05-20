@@ -65,8 +65,11 @@ module Util
     end
 
     def db_mgr
-      # makes it "singleton-like" inside the class
-      @db_mgr ||= Util::DbManager.new(event: @load_event, schema: @schema)
+      if @db_mgr.nil?
+        @db_mgr = Util::DbManager.new(event: @load_event, schema: @schema)
+      else
+        @db_mgr.event = @load_event # always has acccess to the latest event
+      end
     end
 
     def update_current_studies
