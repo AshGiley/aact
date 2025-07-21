@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: aact
+      POSTGRES_USER: aact
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  api:
+    build: ./fastapi_app
+    environment:
+      DATABASE_URL: postgres://aact:password@db:5432/aact
+    volumes:
+      - ./fastapi_app/app:/app/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+volumes:
+  pgdata:
