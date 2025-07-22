@@ -1,6 +1,6 @@
 # FastAPI Example for AACT
 
-This folder contains a minimal FastAPI application that acts as a placeholder for a future Python implementation of the AACT service.
+This folder contains a minimal FastAPI application that acts as a starting point for rewriting the Rails `app` folder in Python.
 
 ## Folder Structure
 
@@ -8,6 +8,8 @@ This folder contains a minimal FastAPI application that acts as a placeholder fo
 fastapi_app/
   app/
     main.py          # FastAPI application entrypoint
+    models/          # Pydantic models translated from Rails
+    routes/          # API routers
   requirements.txt   # Python dependencies
   Dockerfile         # Image to run the service
 ```
