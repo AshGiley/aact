@@ -21,3 +21,6 @@ data
 /public/static/documentation/schema.dot
 /storage
 /downloads
+# Python
+__pycache__/
+*.pyc
